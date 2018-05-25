@@ -1,0 +1,27 @@
+//整型序列的定义
+template<int...>
+struct IndexSeq{};
+
+//继承方式，开始展开参数包
+template<int N, int... Indexes>
+struct MakeIndexes : MakeIndexes<N - 1, N - 1, Indexes...> {};
+
+// 模板特化，终止展开参数包的条件
+template<int... Indexes>
+struct MakeIndexes<0,Indexes...>
+{
+	//typedef IndexSeq<Indexes...> type;
+	using type = IndexSeq<Indexes...>;
+};
+
+template<typename F, int ... Indexes, typename ... Args>
+static auto call_helper(F f, IndexSeq<Indexes...>, const std::tuple<Args...>& tup) -> decltype(f(std::get<Indexes>(tup)...))
+{
+	return f(std::get<Indexes>(tup)...);
+}
+
+template<typename F, typename ... Args>
+static auto call(F f, const std::tuple<Args...>& tp) ->decltype(call_helper(f, MakeIndexes<sizeof... (Args)>::type(), tp))
+{
+	return call_helper(f, MakeIndexes<sizeof... (Args)>::type(), tp);
+}
